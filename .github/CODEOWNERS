@@ -1,0 +1,37 @@
+# CODEOWNERS file for ftms-backend
+# Automatically request reviews from team members
+
+# Default owners for everything in the repo
+# All backend developers own the code by default
+* @ftms-banking/backend-developers
+
+# Core backend code requires review from code-reviewers (tech leads & senior developers)
+/src/main/java/**/*.java @ftms-banking/code-reviewers
+/src/main/java/**/service/**/*.java @ftms-banking/code-reviewers
+/src/main/java/**/controller/**/*.java @ftms-banking/code-reviewers
+
+# Configuration files require code-reviewer approval
+/pom.xml @ftms-banking/code-reviewers
+/src/main/resources/application*.yml @ftms-banking/code-reviewers
+/src/main/resources/application*.properties @ftms-banking/code-reviewers
+
+# Security-sensitive code requires code-reviewer approval
+/src/main/java/**/security/** @ftms-banking/code-reviewers
+/src/main/java/**/config/SecurityConfig.java @ftms-banking/code-reviewers
+
+# Database migrations and schema changes require code-reviewer approval
+/src/main/resources/db/** @ftms-banking/code-reviewers
+
+# CI/CD and build configuration
+/.github/workflows/** @ftms-banking/code-reviewers
+/Jenkinsfile @ftms-banking/code-reviewers
+/docker-compose.yml @ftms-banking/code-reviewers
+/Dockerfile @ftms-banking/code-reviewers
+
+# Documentation can be reviewed by anyone
+/docs/** @ftms-banking/everyone
+/README.md @ftms-banking/everyone
+*.md @ftms-banking/everyone
+
+# Test files can be reviewed by backend developers
+/src/test/** @ftms-banking/backend-developers

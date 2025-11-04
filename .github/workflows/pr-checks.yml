@@ -1,0 +1,68 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  pr-validation:
+    name: PR Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ✅ Validate PR title
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+
+      - name: 📝 Check PR description
+        run: |
+          PR_BODY="${{ github.event.pull_request.body }}"
+          if [ -z "$PR_BODY" ] || [ "$PR_BODY" = "null" ]; then
+            echo "::error::PR description cannot be empty"
+            exit 1
+          fi
+          echo "✅ PR description is present"
+
+      - name: 📏 Check PR size
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const additions = pr.additions;
+            const deletions = pr.deletions;
+            const totalChanges = additions + deletions;
+            
+            console.log(`📊 PR Stats: +${additions} -${deletions} (Total: ${totalChanges} lines)`);
+            
+            if (totalChanges > 1000) {
+              core.warning(`⚠️ Large PR detected (${totalChanges} lines). Consider breaking it into smaller PRs.`);
+            }
+            
+            if (totalChanges > 2000) {
+              core.setFailed(`❌ PR is too large (${totalChanges} lines). Maximum allowed: 2000 lines.`);
+            }
