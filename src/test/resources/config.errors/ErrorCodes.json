@@ -1,0 +1,7 @@
+{
+  "ERR_1001": {
+    "code": "ERR_1001",
+    "reasonCode": "Invalid Request",
+    "message": "Your browser sent a request that this server couldn't understand"
+  }
+}

@@ -1,0 +1,1164 @@
+openapi: 3.0.3
+info:
+  title: FTMS - Financial Transaction Management System API
+  description: |
+    Enterprise-grade REST API for managing customers, accounts, transactions, and compliance.
+    
+    ## Features
+    - Customer onboarding and KYC management
+    - Multi-currency account management
+    - Secure transaction processing
+    - Real-time compliance monitoring
+    - Comprehensive audit trails
+    
+    ## Authentication
+    All endpoints (except health checks) require JWT Bearer token authentication.
+    
+    ## Rate Limiting
+    - 1000 requests per hour per IP
+    - 100 requests per minute per user
+    
+    ## Versioning
+    API version is specified in the URL path (e.g., /api/v1/)
+
+  version: 1.0.0
+  contact:
+    name: FTMS Development Team
+    email: dev@ftms.com
+    url: https://github.com/ftms-banking
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development
+  - url: http://localhost:8090/api/v1
+    description: Local Docker
+  - url: https://api-dev.ftms.com/api/v1
+    description: Development environment
+  - url: https://api-staging.ftms.com/api/v1
+    description: Staging environment
+  - url: https://api.ftms.com/api/v1
+    description: Production environment
+
+tags:
+  - name: Health
+    description: System health and monitoring endpoints
+  - name: Customers
+    description: FtmsAccount management and KYC operations
+  - name: Accounts
+    description: Account creation and management
+  - name: Transactions
+    description: Transaction processing and history
+  - name: Compliance
+    description: Compliance events and audit logs
+
+security:
+  - BearerAuth: []
+
+paths:
+  # ============================================
+  # HEALTH ENDPOINTS
+  # ============================================
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Basic health check
+      description: Returns basic service health status
+      operationId: getHealth
+      security: []  # No authentication required
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: UP
+                service: FTMS Backend
+                version: 0.0.1-SNAPSHOT
+                timestamp: "2025-11-03T17:30:00Z"
+
+  # ============================================
+  # CUSTOMER ENDPOINTS
+  # ============================================
+  /customers:
+    post:
+      tags:
+        - Customers
+      summary: Register new customer
+      description: Create a new customer account with initial KYC data
+      operationId: createCustomer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerCreateRequest'
+            example:
+              email: john.doe@example.com
+              firstName: John
+              lastName: Doe
+              dateOfBirth: "1990-05-15"
+              phoneNumber: "+1234567890"
+              address:
+                street: 123 Main St
+                city: New York
+                state: NY
+                postalCode: "10001"
+                country: USA
+      responses:
+        '201':
+          description: FtmsAccount created successfully
+          headers:
+            Location:
+              description: URL of the created customer
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: FtmsAccount with email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    get:
+      tags:
+        - Customers
+      summary: List all customers
+      description: Retrieve paginated list of customers with optional filters
+      operationId: listCustomers
+      parameters:
+        - $ref: '#/components/parameters/PageNumber'
+        - $ref: '#/components/parameters/PageSize'
+        - name: status
+          in: query
+          description: Filter by customer status
+          schema:
+            $ref: '#/components/schemas/CustomerStatus'
+        - name: kycStatus
+          in: query
+          description: Filter by KYC status
+          schema:
+            $ref: '#/components/schemas/KYCStatus'
+        - name: search
+          in: query
+          description: Search by name or email
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of customers retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /customers/{customerId}:
+    get:
+      tags:
+        - Customers
+      summary: Get customer by ID
+      description: Retrieve detailed customer information
+      operationId: getCustomerById
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      responses:
+        '200':
+          description: FtmsAccount found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Customers
+      summary: Update customer
+      description: Update customer information (full update)
+      operationId: updateCustomer
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerUpdateRequest'
+      responses:
+        '200':
+          description: FtmsAccount updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    patch:
+      tags:
+        - Customers
+      summary: Partially update customer
+      description: Update specific customer fields
+      operationId: patchCustomer
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: FtmsAccount updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /customers/{customerId}/kyc:
+    post:
+      tags:
+        - Customers
+      summary: Submit KYC documents
+      description: Upload KYC documents for verification
+      operationId: submitKYC
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - documentType
+                - file
+              properties:
+                documentType:
+                  $ref: '#/components/schemas/DocumentType'
+                file:
+                  type: string
+                  format: binary
+                documentNumber:
+                  type: string
+                expiryDate:
+                  type: string
+                  format: date
+      responses:
+        '201':
+          description: KYC document uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KYCDocumentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================
+  # ACCOUNT ENDPOINTS
+  # ============================================
+  /accounts:
+    post:
+      tags:
+        - Accounts
+      summary: Create new account
+      description: Create a new account for an existing customer
+      operationId: createAccount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountCreateRequest'
+            example:
+              customerId: "550e8400-e29b-41d4-a716-446655440000"
+              accountType: SAVINGS
+              currency: USD
+      responses:
+        '201':
+          description: Account created successfully
+          headers:
+            Location:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: FtmsAccount not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags:
+        - Accounts
+      summary: List accounts
+      description: Retrieve paginated list of accounts with filters
+      operationId: listAccounts
+      parameters:
+        - $ref: '#/components/parameters/PageNumber'
+        - $ref: '#/components/parameters/PageSize'
+        - name: customerId
+          in: query
+          description: Filter by customer ID
+          schema:
+            type: string
+            format: uuid
+        - name: accountType
+          in: query
+          description: Filter by account type
+          schema:
+            $ref: '#/components/schemas/AccountType'
+        - name: status
+          in: query
+          description: Filter by account status
+          schema:
+            $ref: '#/components/schemas/AccountStatus'
+      responses:
+        '200':
+          description: List retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountListResponse'
+
+  /accounts/{accountId}:
+    get:
+      tags:
+        - Accounts
+      summary: Get account details
+      description: Retrieve detailed account information
+      operationId: getAccountById
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      responses:
+        '200':
+          description: Account found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags:
+        - Accounts
+      summary: Update account status
+      description: Change account status (activate, suspend, close)
+      operationId: updateAccountStatus
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  $ref: '#/components/schemas/AccountStatus'
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Account status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /accounts/{accountId}/balance:
+    get:
+      tags:
+        - Accounts
+      summary: Get account balance
+      description: Retrieve current account balance
+      operationId: getAccountBalance
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      responses:
+        '200':
+          description: Balance retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================
+  # TRANSACTION ENDPOINTS
+  # ============================================
+  /transactions:
+    post:
+      tags:
+        - Transactions
+      summary: Create transaction
+      description: Process a new financial transaction
+      operationId: createTransaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionCreateRequest'
+            example:
+              idempotencyKey: "txn-2025-11-03-12345"
+              sourceAccountId: "550e8400-e29b-41d4-a716-446655440001"
+              destinationAccountId: "550e8400-e29b-41d4-a716-446655440002"
+              amount: 1000.00
+              currency: USD
+              description: "Payment for services"
+              type: TRANSFER
+      responses:
+        '201':
+          description: Transaction created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Duplicate transaction (idempotency key exists)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    get:
+      tags:
+        - Transactions
+      summary: List transactions
+      description: Retrieve transaction history with filters
+      operationId: listTransactions
+      parameters:
+        - $ref: '#/components/parameters/PageNumber'
+        - $ref: '#/components/parameters/PageSize'
+        - name: accountId
+          in: query
+          description: Filter by account ID
+          schema:
+            type: string
+            format: uuid
+        - name: type
+          in: query
+          description: Filter by transaction type
+          schema:
+            $ref: '#/components/schemas/TransactionType'
+        - name: status
+          in: query
+          description: Filter by transaction status
+          schema:
+            $ref: '#/components/schemas/TransactionStatus'
+        - name: fromDate
+          in: query
+          description: Start date filter
+          schema:
+            type: string
+            format: date-time
+        - name: toDate
+          in: query
+          description: End date filter
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Transactions retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionListResponse'
+
+  /transactions/{transactionId}:
+    get:
+      tags:
+        - Transactions
+      summary: Get transaction details
+      description: Retrieve detailed transaction information
+      operationId: getTransactionById
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+      responses:
+        '200':
+          description: Transaction found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /transactions/{transactionId}/reverse:
+    post:
+      tags:
+        - Transactions
+      summary: Reverse transaction
+      description: Reverse a completed transaction
+      operationId: reverseTransaction
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - reason
+              properties:
+                reason:
+                  type: string
+                  minLength: 10
+      responses:
+        '201':
+          description: Reversal transaction created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================
+  # COMPLIANCE ENDPOINTS
+  # ============================================
+  /compliance/events:
+    get:
+      tags:
+        - Compliance
+      summary: List compliance events
+      description: Retrieve compliance events for audit purposes
+      operationId: listComplianceEvents
+      parameters:
+        - $ref: '#/components/parameters/PageNumber'
+        - $ref: '#/components/parameters/PageSize'
+        - name: entityType
+          in: query
+          schema:
+            type: string
+            enum: [CUSTOMER, ACCOUNT, TRANSACTION]
+        - name: entityId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Events retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplianceEventListResponse'
+
+# ============================================
+# COMPONENTS
+# ============================================
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Bearer token authentication
+
+  parameters:
+    CustomerId:
+      name: customerId
+      in: path
+      required: true
+      description: FtmsAccount UUID
+      schema:
+        type: string
+        format: uuid
+
+    AccountId:
+      name: accountId
+      in: path
+      required: true
+      description: Account UUID
+      schema:
+        type: string
+        format: uuid
+
+    TransactionId:
+      name: transactionId
+      in: path
+      required: true
+      description: Transaction UUID
+      schema:
+        type: string
+        format: uuid
+
+    PageNumber:
+      name: page
+      in: query
+      description: Page number (0-indexed)
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+
+    PageSize:
+      name: size
+      in: query
+      description: Number of items per page
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationErrorResponse'
+
+  schemas:
+    # ============================================
+    # COMMON SCHEMAS
+    # ============================================
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - service
+        - version
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: [UP, DOWN]
+        service:
+          type: string
+        version:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      required:
+        - timestamp
+        - status
+        - error
+        - message
+        - path
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+        traceId:
+          type: string
+
+    ValidationErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+        - type: object
+          properties:
+            errors:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  message:
+                    type: string
+                  rejectedValue:
+                    type: string
+
+    PageMetadata:
+      type: object
+      required:
+        - page
+        - size
+        - totalElements
+        - totalPages
+      properties:
+        page:
+          type: integer
+          description: Current page number
+        size:
+          type: integer
+          description: Page size
+        totalElements:
+          type: integer
+          format: int64
+          description: Total number of elements
+        totalPages:
+          type: integer
+          description: Total number of pages
+
+    Address:
+      type: object
+      required:
+        - street
+        - city
+        - country
+      properties:
+        street:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        postalCode:
+          type: string
+        country:
+          type: string
+          minLength: 2
+          maxLength: 2
+          description: ISO 3166-1 alpha-2 country code
+
+    # ============================================
+    # CUSTOMER SCHEMAS
+    # ============================================
+    CustomerStatus:
+      type: string
+      enum:
+        - PENDING
+        - ACTIVE
+        - SUSPENDED
+        - BLOCKED
+        - CLOSED
+
+    KYCStatus:
+      type: string
+      enum:
+        - NOT_SUBMITTED
+        - SUBMITTED
+        - UNDER_REVIEW
+        - APPROVED
+        - REJECTED
+
+    DocumentType:
+      type: string
+      enum:
+        - PASSPORT
+        - DRIVERS_LICENSE
+        - NATIONAL_ID
+        - PROOF_OF_ADDRESS
+
+    CustomerCreateRequest:
+      type: object
+      required:
+        - email
+        - firstName
+        - lastName
+        - dateOfBirth
+        - phoneNumber
+        - address
+      properties:
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+          minLength: 2
+          maxLength: 50
+        lastName:
+          type: string
+          minLength: 2
+          maxLength: 50
+        dateOfBirth:
+          type: string
+          format: date
+        phoneNumber:
+          type: string
+          pattern: '^\+[1-9]\d{1,14}$'
+        address:
+          $ref: '#/components/schemas/Address'
+
+    CustomerUpdateRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phoneNumber:
+          type: string
+        address:
+          $ref: '#/components/schemas/Address'
+
+    CustomerResponse:
+      type: object
+      required:
+        - uuid
+        - email
+        - firstName
+        - lastName
+        - status
+        - kycStatus
+        - createdAt
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        phoneNumber:
+          type: string
+        address:
+          $ref: '#/components/schemas/Address'
+        status:
+          $ref: '#/components/schemas/CustomerStatus'
+        kycStatus:
+          $ref: '#/components/schemas/KYCStatus'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CustomerListResponse:
+      type: object
+      required:
+        - content
+        - page
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomerResponse'
+        page:
+          $ref: '#/components/schemas/PageMetadata'
+
+    KYCDocumentResponse:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        documentType:
+          $ref: '#/components/schemas/DocumentType'
+        documentNumber:
+          type: string
+        expiryDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [PENDING, APPROVED, REJECTED]
+        uploadedAt:
+          type: string
+          format: date-time
+
+    # ============================================
+    # ACCOUNT SCHEMAS
+    # ============================================
+    AccountType:
+      type: string
+      enum:
+        - SAVINGS
+        - CHECKING
+        - BUSINESS
+
+    AccountStatus:
+      type: string
+      enum:
+        - PENDING
+        - ACTIVE
+        - SUSPENDED
+        - CLOSED
+
+    AccountCreateRequest:
+      type: object
+      required:
+        - customerId
+        - accountType
+        - currency
+      properties:
+        customerId:
+          type: string
+          format: uuid
+        accountType:
+          $ref: '#/components/schemas/AccountType'
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          pattern: '^[A-Z]{3}$'
+          description: ISO 4217 currency code
+
+    AccountResponse:
+      type: object
+      required:
+        - uuid
+        - customerId
+        - accountType
+        - currency
+        - balance
+        - status
+        - createdAt
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        customerId:
+          type: string
+          format: uuid
+        accountType:
+          $ref: '#/components/schemas/AccountType'
+        currency:
+          type: string
+        balance:
+          type: number
+          format: double
+        status:
+          $ref: '#/components/schemas/AccountStatus'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    AccountListResponse:
+      type: object
+      required:
+        - content
+        - page
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountResponse'
+        page:
+          $ref: '#/components/schemas/PageMetadata'
+
+    BalanceResponse:
+      type: object
+      required:
+        - accountId
+        - balance
+        - currency
+        - asOfDate
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        balance:
+          type: number
+          format: double
+        currency:
+          type: string
+        asOfDate:
+          type: string
+          format: date-time
+
+    # ============================================
+    # TRANSACTION SCHEMAS
+    # ============================================
+    TransactionType:
+      type: string
+      enum:
+        - DEPOSIT
+        - WITHDRAWAL
+        - TRANSFER
+
+    TransactionStatus:
+      type: string
+      enum:
+        - PENDING
+        - COMPLETED
+        - FAILED
+        - REVERSED
+
+    TransactionCreateRequest:
+      type: object
+      required:
+        - idempotencyKey
+        - sourceAccountId
+        - destinationAccountId
+        - amount
+        - currency
+        - type
+      properties:
+        idempotencyKey:
+          type: string
+          description: Unique key to prevent duplicate transactions
+        sourceAccountId:
+          type: string
+          format: uuid
+        destinationAccountId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: double
+          minimum: 0.01
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        description:
+          type: string
+          maxLength: 500
+        type:
+          $ref: '#/components/schemas/TransactionType'
+
+    TransactionResponse:
+      type: object
+      required:
+        - uuid
+        - sourceAccountId
+        - destinationAccountId
+        - amount
+        - currency
+        - status
+        - type
+        - createdAt
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        idempotencyKey:
+          type: string
+        sourceAccountId:
+          type: string
+          format: uuid
+        destinationAccountId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: double
+        currency:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/TransactionStatus'
+        type:
+          $ref: '#/components/schemas/TransactionType'
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+
+    TransactionListResponse:
+      type: object
+      required:
+        - content
+        - page
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionResponse'
+        page:
+          $ref: '#/components/schemas/PageMetadata'
+
+    # ============================================
+    # COMPLIANCE SCHEMAS
+    # ============================================
+    ComplianceEventResponse:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        entityType:
+          type: string
+        entityId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    ComplianceEventListResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/ComplianceEventResponse'
+        page:
+          $ref: '#/components/schemas/PageMetadata'

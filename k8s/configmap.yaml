@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ftms-config
+  namespace: ftms
+data:
+  application.yml: |
+    spring:
+      application:
+        name: ftms-backend
+      profiles:
+        active: prod
+      datasource:
+        url: ${DB_URL}
+        username: ${DB_USERNAME}
+        password: ${DB_PASSWORD}
+      jpa:
+        hibernate:
+          ddl-auto: validate
+        show-sql: false
+    server:
+      port: 8080
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health,info,prometheus,metrics
+      metrics:
+        export:
+          prometheus:
+            enabled: true
