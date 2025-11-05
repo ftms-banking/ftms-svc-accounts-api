@@ -1,4 +1,4 @@
-package ftms.svc.accounts.api.filter;
+package ftms.svc.accounts.api.interfaces.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
