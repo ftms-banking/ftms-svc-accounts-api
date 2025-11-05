@@ -1,4 +1,4 @@
-package ftms.svc.accounts.api.interfaces.controller;
+package ftms.svc.accounts.api.controller;
 
 import org.springframework.web.context.annotation.RequestScope;
 

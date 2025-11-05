@@ -1,7 +1,7 @@
-package ftms.svc.accounts.api.domain.model;
+package ftms.svc.accounts.api.domain.entity;
 
-import ftms.svc.accounts.api.infrastructure.constants.FtmsAccountStatus;
-import ftms.svc.accounts.api.infrastructure.constants.FtmsAccountType;
+import ftms.svc.accounts.api.domain.FtmsAccountStatus;
+import ftms.svc.accounts.api.constants.FtmsAccountType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;

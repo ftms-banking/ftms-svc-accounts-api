@@ -1,4 +1,4 @@
-package ftms.svc.accounts.api.infrastructure.constants;
+package ftms.svc.accounts.api.domain;
 
 public enum FtmsAccountStatus {
     ACTIVE,

@@ -1,4 +1,4 @@
-package ftms.svc.accounts.api.domain.model;
+package ftms.svc.accounts.api.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
