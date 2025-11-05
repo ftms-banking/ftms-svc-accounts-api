@@ -28,3 +28,10 @@ logging:
     root: INFO
     com.ftms.backend: DEBUG
 
+
+downstream:
+  ftms:
+    api:
+      customers:
+        url: http://localhost:8080/api/v1/customers/{customerId}
+        timeout: 15
