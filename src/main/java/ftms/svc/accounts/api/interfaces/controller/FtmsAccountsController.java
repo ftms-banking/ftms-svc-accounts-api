@@ -19,8 +19,7 @@ import java.util.Map;
 @Validated
 @RestController
 @RequiredArgsConstructor
-//@RequestMapping(FtmsAccountsApiConstants.FTMS_ACCOUNTS_API_V1)
-@RequestMapping("/api/v1/accounts")
+@RequestMapping(FtmsAccountsApiConstants.FTMS_ACCOUNTS_API_V1)
 public class FtmsAccountsController {
 
     private final AccountApplicationService service;
