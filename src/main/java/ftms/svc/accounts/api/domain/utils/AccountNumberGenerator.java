@@ -5,17 +5,19 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.ThreadLocalRandom;
+import java.security.SecureRandom;
 
 @Slf4j
 public class AccountNumberGenerator {
     private AccountNumberGenerator(){}
 
     private static final AtomicLong COUNTER = new AtomicLong(0);
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     public static String createAccountNumber() {
         long epochPart = Instant.now().toEpochMilli(); // 13 digits
         long counterPart = COUNTER.getAndIncrement() % 10000; // 4 digits
-        int randomPart = ThreadLocalRandom.current().nextInt(100, 999); // 3 digits
+        int randomPart = SECURE_RANDOM.nextInt(100, 999); // 3 digits
 
         // Build complete number
         String generatedAccountNumber = String.format("%013d%04d%03d", epochPart, counterPart, randomPart);
