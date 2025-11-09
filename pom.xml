@@ -23,6 +23,30 @@
 	</properties>
 
 	<dependencies>
+		<!-- Testing -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- test scope only -->
+		<dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>mockwebserver</artifactId>
+			<version>4.12.0</version>
+			<scope>test</scope>
+		</dependency>
+
+
+
+		<!-- Optional (brought by spring-boot-starter-test, keep only if you need specific version) -->
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-junit-jupiter</artifactId>
+			<version>5.5.0</version>
+			<scope>test</scope>
+		</dependency>
 
 		<!-- Core Spring Boot Starters -->
 		<dependency>
@@ -45,6 +69,12 @@
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
+		<!-- WebClient -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
+		</dependency>
+
 		<!-- Database Connectors -->
 		<dependency>
 			<groupId>com.h2database</groupId>
@@ -58,7 +88,7 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- Lombok for Code Generation -->
+		<!-- Lombok -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
@@ -73,31 +103,17 @@
 		</dependency>
 
 		<!-- Jackson Nullable (for OpenAPI) -->
-		<dependency>
-			<groupId>org.openapitools</groupId>
-			<artifactId>jackson-databind-nullable</artifactId>
-			<version>0.2.6</version>
-		</dependency>
-
-		<!-- Testing -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webflux</artifactId>
-		</dependency>
-
+<!--		<dependency>-->
+<!--			<groupId>org.openapitools</groupId>-->
+<!--			<artifactId>jackson-databind-nullable</artifactId>-->
+<!--			<version>0.2.6</version>-->
+<!--		</dependency>-->
 	</dependencies>
 
 	<build>
 		<finalName>${project.artifactId}-${project.version}</finalName>
 
 		<plugins>
-
 			<!-- Spring Boot Packaging -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
@@ -150,49 +166,10 @@
 					</execution>
 				</executions>
 			</plugin>
-
-			<!-- SonarQube Integration -->
-			<plugin>
-				<groupId>org.sonarsource.scanner.maven</groupId>
-				<artifactId>sonar-maven-plugin</artifactId>
-				<version>3.10.0.2594</version>
-			</plugin>
-
-			<!-- OpenAPI Generator -->
-			<plugin>
-				<groupId>org.openapitools</groupId>
-				<artifactId>openapi-generator-maven-plugin</artifactId>
-				<version>7.2.0</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>generate</goal>
-						</goals>
-						<configuration>
-							<inputSpec>${project.basedir}/src/main/resources/openapi/ftms-api.yaml</inputSpec>
-							<generatorName>spring</generatorName>
-							<apiPackage>com.ftms.backend.api</apiPackage>
-							<modelPackage>com.ftms.backend.api.model</modelPackage>
-							<supportingFilesToGenerate>ApiUtil.java</supportingFilesToGenerate>
-							<configOptions>
-								<interfaceOnly>true</interfaceOnly>
-								<useSpringBoot3>true</useSpringBoot3>
-								<useJakartaEe>true</useJakartaEe>
-								<skipDefaultInterface>true</skipDefaultInterface>
-								<useTags>true</useTags>
-							</configOptions>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
 		</plugins>
 	</build>
 
-	<!-- Environment Profiles -->
 	<profiles>
-
-		<!-- CI/CD -->
 		<profile>
 			<id>ci</id>
 			<properties>
@@ -200,7 +177,6 @@
 			</properties>
 		</profile>
 
-		<!-- Fast Local Build -->
 		<profile>
 			<id>fast</id>
 			<properties>
@@ -209,7 +185,6 @@
 				<jacoco.skip>true</jacoco.skip>
 			</properties>
 		</profile>
-
 	</profiles>
 
 </project>

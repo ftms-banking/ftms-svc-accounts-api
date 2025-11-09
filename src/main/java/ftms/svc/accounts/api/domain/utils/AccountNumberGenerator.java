@@ -8,6 +8,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 public class AccountNumberGenerator {
+    private AccountNumberGenerator(){}
 
     private static final AtomicLong COUNTER = new AtomicLong(0);
 

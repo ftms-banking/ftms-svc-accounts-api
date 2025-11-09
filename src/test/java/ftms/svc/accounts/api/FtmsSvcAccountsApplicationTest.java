@@ -1,18 +1,16 @@
 package ftms.svc.accounts.api;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 @SpringBootTest
 @ActiveProfiles("test")
-class FtmsSvcAccountsApiApplicationTests {
+class FtmsSvcAccountsApplicationTest {
 
-	@Test
-	void contextLoads() {
-		assertEquals (1,1);
-	}
-
+    @Test
+    void contextLoad(){
+        Assertions.assertTrue(true);
+    }
 }

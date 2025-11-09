@@ -26,7 +26,7 @@ public class FtmsAccountServiceImpl implements FtmsAccountService {
     public FtmsAccountResult createFtmsAccount(FtmsCreateAccount ftmsCreateAccount) {
         Object customer = ftmsCustomerApiService.getCustomer(ftmsCreateAccount.getCustomerId());
 
-        if(customer == null){
+        if (customer == null) {
             throw new BusinessRuleValidationException("Customer not found", FtmsAccountsApiConstants.ERR_3001);
         }
 

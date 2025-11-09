@@ -36,7 +36,6 @@ public class FtmsAccountsController {
     }
 
 
-
     /**
      * Returns basic health information of the service.
      *
