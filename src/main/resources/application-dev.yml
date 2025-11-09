@@ -1,12 +1,21 @@
 spring:
-  jpa:
-    show-sql: true
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema.sql
+      data-locations: classpath:db/seed_data.sql   # optional; remove if not needed
+      encoding: UTF-8
 
-  devtools:
-    restart:
-      enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: validate         # <- Hibernate does NOT create/alter; only validates
+    defer-datasource-initialization: true  # <- run schema.sql BEFORE Hibernate starts
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect  # modern dialect name
 
 logging:
   level:
     org.springframework.web: DEBUG
     org.hibernate.SQL: DEBUG
+    org.hibernate.tool.hbm2ddl: DEBUG     # <- shows validation details
